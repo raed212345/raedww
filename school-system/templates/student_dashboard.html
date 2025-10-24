@@ -1,0 +1,231 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الطالب</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="student-body">
+    <!-- شريط التنقل -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/student/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - الطالب
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-graduate me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- القائمة الجانبية -->
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/student/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/rooms">
+                                <i class="fas fa-door-open me-2"></i>
+                                الغرف الدراسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/student/assignments">
+                                <i class="fas fa-tasks me-2"></i>
+                                الواجبات
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- المحتوى الرئيسي -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        لوحة التحكم
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <span class="badge bg-primary fs-6">{{ session.grade }}/{{ session.section }}</span>
+                    </div>
+                </div>
+
+                <!-- إحصائيات سريعة -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            الغرف الدراسية</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.rooms_count }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            إجمالي الواجبات</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.assignments_count }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            واجبات معلقة</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending_assignments }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الغرف الدراسية -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="m-0 font-weight-bold">
+                                    <i class="fas fa-door-open me-2"></i>
+                                    غرفك الدراسية
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if rooms %}
+                                <div class="row">
+                                    {% for room in rooms %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ room.name }}</h5>
+                                                <p class="card-text">
+                                                    <strong>المادة:</strong> {{ room.subject }}<br>
+                                                    <strong>المعلم:</strong> {{ room.teacher_name }}<br>
+                                                    <strong>الرمز:</strong> <code>{{ room.code }}</code>
+                                                </p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <a href="/student/room/{{ room.id }}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-comments me-1"></i>
+                                                    الدخول للدردشة
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">لا توجد غرف دراسية</h5>
+                                    <p class="text-muted">انضم إلى غرفة دراسية للبدء</p>
+                                    <a href="/student/rooms" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>
+                                        استكشاف الغرف
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إجراءات سريعة -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-header bg-info text-white">
+                                <h6 class="m-0 font-weight-bold">
+                                    <i class="fas fa-bolt me-2"></i>
+                                    إجراءات سريعة
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row text-center">
+                                    <div class="col-md-4 mb-3">
+                                        <a href="/student/rooms" class="btn btn-outline-primary btn-lg w-100">
+                                            <i class="fas fa-door-open fa-2x mb-2"></i><br>
+                                            الغرف الدراسية
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <a href="/student/assignments" class="btn btn-outline-success btn-lg w-100">
+                                            <i class="fas fa-tasks fa-2x mb-2"></i><br>
+                                            الواجبات
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <a href="/student/rooms" class="btn btn-outline-warning btn-lg w-100">
+                                            <i class="fas fa-plus fa-2x mb-2"></i><br>
+                                            انضم لغرفة
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- رسائل التنبيه -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

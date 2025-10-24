@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حلول الطلاب - {{ assignment.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="teacher-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/teacher/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - المعلم
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/rooms">
+                                <i class="fas fa-door-open me-2"></i>
+                                الغرف الدراسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/assignments">
+                                <i class="fas fa-tasks me-2"></i>
+                                الواجبات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/students">
+                                <i class="fas fa-users me-2"></i>
+                                الطلاب
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-file-alt me-2"></i>
+                        حلول الطلاب - {{ assignment.title }}
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <a href="/teacher/assignments" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-1"></i>
+                            العودة
+                        </a>
+                    </div>
+                </div>
+
+                <!-- معلومات الواجب -->
+                <div class="card shadow mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-info-circle me-2"></i>
+                            معلومات الواجب
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>العنوان:</strong> {{ assignment.title }}</p>
+                                <p><strong>المادة:</strong> {{ assignment.subject }}</p>
+                                <p><strong>الصف:</strong> {{ assignment.grade }}/{{ assignment.section }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>موعد التسليم:</strong> {{ assignment.due_date }}</p>
+                                <p><strong>الدرجة الكاملة:</strong> {{ assignment.total_marks }}</p>
+                                <p><strong>عدد الحلول:</strong> {{ submissions|length }}</p>
+                            </div>
+                        </div>
+                        <p><strong>الوصف:</strong> {{ assignment.description }}</p>
+                    </div>
+                </div>
+
+                <!-- حلول الطلاب -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-users me-2"></i>
+                            حلول الطلاب ({{ submissions|length }})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if submissions %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>اسم الطالب</th>
+                                        <th>الصف</th>
+                                        <th>القسم</th>
+                                        <th>تاريخ التسليم</th>
+                                        <th>الحل</th>
+                                        <th>الدرجة</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for submission in submissions %}
+                                    <tr>
+                                        <td>
+                                            <i class="fas fa-user-graduate text-success me-2"></i>
+                                            {{ submission.student_name }}
+                                        </td>
+                                        <td>{{ submission.grade }}</td>
+                                        <td>{{ submission.section }}</td>
+                                        <td>{{ submission.submitted_at[:16] }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#solutionModal{{ submission.id }}">
+                                                <i class="fas fa-eye me-1"></i>
+                                                عرض الحل
+                                            </button>
+                                        </td>
+                                        <td>
+                                            {% if submission.grade %}
+                                                <span class="badge bg-success">{{ submission.grade }}/{{ assignment.total_marks }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">لم يتم التصحيح</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if submission.status == 'graded' %}
+                                                <span class="badge bg-success">تم التصحيح</span>
+                                            {% else %}
+                                                <span class="badge bg-info">بانتظار التصحيح</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if submission.status != 'graded' %}
+                                            <button class="btn btn-sm btn-success" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#gradeModal{{ submission.id }}">
+                                                <i class="fas fa-check me-1"></i>
+                                                تصحيح
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-sm btn-warning" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#gradeModal{{ submission.id }}">
+                                                <i class="fas fa-edit me-1"></i>
+                                                تعديل
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+
+                                    <!-- Modal عرض الحل -->
+                                    <div class="modal fade" id="solutionModal{{ submission.id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">حل الطالب: {{ submission.student_name }}</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <strong>الحل:</strong>
+                                                        <div class="p-3 bg-light rounded mt-2">
+                                                            {{ submission.solution|replace('\n', '<br>')|safe }}
+                                                        </div>
+                                                    </div>
+                                                    {% if submission.feedback %}
+                                                    <div class="mb-3">
+                                                        <strong>ملاحظات التصحيح:</strong>
+                                                        <div class="p-3 bg-warning rounded mt-2">
+                                                            {{ submission.feedback }}
+                                                        </div>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Modal التصحيح -->
+                                    <div class="modal fade" id="gradeModal{{ submission.id }}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-success text-white">
+                                                    <h5 class="modal-title">تصحيح حل الطالب: {{ submission.student_name }}</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form onsubmit="gradeSubmission(event, {{ submission.id }})">
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">الدرجة (من {{ assignment.total_marks }})</label>
+                                                            <input type="number" class="form-control" 
+                                                                   id="grade{{ submission.id }}" 
+                                                                   value="{{ submission.grade or 0 }}"
+                                                                   min="0" max="{{ assignment.total_marks }}" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">ملاحظات التصحيح</label>
+                                                            <textarea class="form-control" 
+                                                                      id="feedback{{ submission.id }}" 
+                                                                      rows="4"
+                                                                      placeholder="أدخل ملاحظاتك على الحل...">{{ submission.feedback or '' }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                                                        <button type="submit" class="btn btn-success">حفظ التصحيح</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد حلول مسلمة بعد</h5>
+                            <p class="text-muted">لم يقم أي طالب بتسليم هذا الواجب بعد</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- التوقيع -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-code me-2"></i>
+                صنع بواسطة: راشد رائد الجراونه مع عبد الرحمان اكرم دنديس
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function gradeSubmission(event, submissionId) {
+            event.preventDefault();
+            
+            const grade = document.getElementById('grade' + submissionId).value;
+            const feedback = document.getElementById('feedback' + submissionId).value;
+            
+            fetch('/api/grade_submission', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `submission_id=${submissionId}&grade=${grade}&feedback=${encodeURIComponent(feedback)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم حفظ التصحيح بنجاح!');
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('خطأ في الاتصال: ' + error);
+            });
+        }
+    </script>
+</body>
+</html>

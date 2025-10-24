@@ -1,0 +1,455 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الواجبات - المعلم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%);
+        }
+        .sidebar .nav-link {
+            color: white;
+            border-radius: 8px;
+            margin: 4px 0;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+        .sidebar .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+        .sidebar .nav-link:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .stats-card {
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .overdue {
+            background-color: #f8d7da !important;
+        }
+        .due-today {
+            background-color: #fff3cd !important;
+        }
+    </style>
+</head>
+<body class="teacher-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/teacher/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - المعلم
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/rooms">
+                                <i class="fas fa-door-open me-2"></i>
+                                الغرف الدراسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/teacher/assignments">
+                                <i class="fas fa-tasks me-2"></i>
+                                الواجبات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/students">
+                                <i class="fas fa-users me-2"></i>
+                                الطلاب
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-tasks me-2"></i>
+                        إدارة الواجبات
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
+                            <i class="fas fa-plus me-1"></i>
+                            إنشاء واجب جديد
+                        </button>
+                    </div>
+                </div>
+
+                <!-- إحصائيات سريعة -->
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            إجمالي الواجبات</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ assignments|length }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            الحلول المسلمة</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {% set total_submissions = assignments|sum(attribute='submissions_count') %}
+                                            {{ total_submissions }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            الواجبات المصححة</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {% set total_graded = assignments|sum(attribute='graded_count') %}
+                                            {{ total_graded }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-star fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            تحت التصحيح</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                            {{ total_submissions - total_graded }}
+                                        </div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-list me-2"></i>
+                            قائمة الواجبات
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if assignments %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>عنوان الواجب</th>
+                                        <th>المادة</th>
+                                        <th>الصف</th>
+                                        <th>القسم</th>
+                                        <th>موعد التسليم</th>
+                                        <th>الدرجة الكاملة</th>
+                                        <th>المسلمين</th>
+                                        <th>المصححين</th>
+                                        <th>الحالة</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in assignments %}
+                                    {% set is_overdue = assignment.due_date < today %}
+                                    {% set is_due_today = assignment.due_date == today %}
+                                    <tr class="{% if is_overdue %}overdue{% elif is_due_today %}due-today{% endif %}">
+                                        <td>
+                                            <strong>{{ assignment.title }}</strong>
+                                            {% if is_overdue %}
+                                            <span class="badge bg-danger ms-2">منتهي</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ assignment.subject }}</td>
+                                        <td>{{ assignment.grade }}</td>
+                                        <td>{{ assignment.section }}</td>
+                                        <td>
+                                            {{ assignment.due_date }}
+                                            {% if is_due_today %}
+                                            <span class="badge bg-warning">اليوم</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary">{{ assignment.total_marks }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">{{ assignment.submissions_count }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">{{ assignment.graded_count }}</span>
+                                        </td>
+                                        <td>
+                                            {% if assignment.submissions_count == assignment.graded_count and assignment.submissions_count > 0 %}
+                                                <span class="badge bg-success">مكتمل</span>
+                                            {% elif assignment.graded_count > 0 %}
+                                                <span class="badge bg-warning">جاري التصحيح</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">بانتظار الحلول</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="/teacher/assignment/{{ assignment.id }}" class="btn btn-info">
+                                                    <i class="fas fa-eye me-1"></i>عرض الحلول
+                                                </a>
+                                                <button class="btn btn-outline-primary" 
+                                                        data-bs-toggle="modal" 
+                                                        data-bs-target="#viewAssignmentModal{{ assignment.id }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <!-- Modal عرض تفاصيل الواجب -->
+                                    <div class="modal fade" id="viewAssignmentModal{{ assignment.id }}" tabindex="-1">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-primary text-white">
+                                                    <h5 class="modal-title">{{ assignment.title }}</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row mb-3">
+                                                        <div class="col-md-6">
+                                                            <p><strong>المادة:</strong> {{ assignment.subject }}</p>
+                                                            <p><strong>الصف:</strong> {{ assignment.grade }}/{{ assignment.section }}</p>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <p><strong>موعد التسليم:</strong> {{ assignment.due_date }}</p>
+                                                            <p><strong>الدرجة الكاملة:</strong> {{ assignment.total_marks }}</p>
+                                                        </div>
+                                                    </div>
+                                                    <p><strong>وصف الواجب:</strong></p>
+                                                    <div class="p-3 bg-light rounded">
+                                                        {{ assignment.description }}
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <p><strong>إحصائيات التسليم:</strong></p>
+                                                        <div class="row text-center">
+                                                            <div class="col-4">
+                                                                <div class="card bg-primary text-white">
+                                                                    <div class="card-body py-2">
+                                                                        <h6 class="mb-0">{{ assignment.submissions_count }}</h6>
+                                                                        <small>مسلم</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="card bg-success text-white">
+                                                                    <div class="card-body py-2">
+                                                                        <h6 class="mb-0">{{ assignment.graded_count }}</h6>
+                                                                        <small>مصحح</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-4">
+                                                                <div class="card bg-warning text-white">
+                                                                    <div class="card-body py-2">
+                                                                        <h6 class="mb-0">{{ assignment.submissions_count - assignment.graded_count }}</h6>
+                                                                        <small>بانتظار التصحيح</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <a href="/teacher/assignment/{{ assignment.id }}" class="btn btn-primary">
+                                                        <i class="fas fa-eye me-1"></i>عرض الحلول
+                                                    </a>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إغلاق</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد واجبات</h5>
+                            <p class="text-muted">أنشئ واجباً جديداً للبدء</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createAssignmentModal">
+                                <i class="fas fa-plus me-1"></i>
+                                إنشاء واجب
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal إنشاء واجب -->
+    <div class="modal fade" id="createAssignmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">إنشاء واجب جديد</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createAssignmentForm">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">عنوان الواجب</label>
+                                <input type="text" class="form-control" name="title" placeholder="أدخل عنوان الواجب" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">المادة الدراسية</label>
+                                <input type="text" class="form-control" name="subject" placeholder="أدخل اسم المادة" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">الصف</label>
+                                <select class="form-control" name="grade" required>
+                                    <option value="">اختر الصف</option>
+                                    {% for i in range(1, 13) %}
+                                    <option value="{{ i }}">الصف {{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">القسم</label>
+                                <select class="form-control" name="section" required>
+                                    <option value="">اختر القسم</option>
+                                    <option value="أ">أ</option>
+                                    <option value="ب">ب</option>
+                                    <option value="ج">ج</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">الدرجة الكاملة</label>
+                                <input type="number" class="form-control" name="total_marks" min="1" max="100" value="10" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">موعد التسليم</label>
+                            <input type="date" class="form-control" name="due_date" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">وصف الواجب</label>
+                            <textarea class="form-control" name="description" rows="4" placeholder="أدخل وصف الواجب والتعليمات..." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إنشاء الواجب</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- التوقيع -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-code me-2"></i>
+                صنع بواسطة: راشد رائد الجراونه مع عبد الرحمان اكرم دنديس
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('createAssignmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/api/create_assignment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم إنشاء الواجب بنجاح!');
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('خطأ في الاتصال: ' + error);
+            });
+        });
+
+        // تعيين تاريخ اليوم كحد أدنى لتاريخ التسليم
+        const today = new Date().toISOString().split('T')[0];
+        document.querySelector('input[name="due_date"]').min = today;
+    </script>
+</body>
+</html>

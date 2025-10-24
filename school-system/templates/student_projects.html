@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المشاريع والآراء - الطالب</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard student-dashboard">
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-user-graduate"></i>
+            <h2>الطالب</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <span class="name">{{ session.name }}</span>
+                <span class="role">الصف {{ session.grade }} - {{ session.section }}</span>
+            </div>
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="{{ url_for('student_dashboard') }}" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a></li>
+            <li><a href="{{ url_for('student_rooms') }}" class="nav-item">
+                <i class="fas fa-door-open"></i>
+                <span>الغرف الدراسية</span>
+            </a></li>
+            <li><a href="{{ url_for('student_assignments') }}" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+            </a></li>
+            <li><a href="{{ url_for('student_projects') }}" class="nav-item active">
+                <i class="fas fa-project-diagram"></i>
+                <span>المشاريع والآراء</span>
+            </a></li>
+            <li><a href="{{ url_for('logout') }}" class="nav-item logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h1>المشاريع والآراء</h1>
+            <p>إرسال مشاريعك وآرائك للإدارة</p>
+            <div class="actions">
+                <button class="btn btn-primary" onclick="showProjectModal()">
+                    <i class="fas fa-plus"></i>
+                    إرسال جديد
+                </button>
+            </div>
+        </header>
+
+        <div class="projects-list">
+            {% for project in projects %}
+            <div class="project-item">
+                <div class="project-header">
+                    <h4>{{ project.title }}</h4>
+                    <span class="status-badge status-{{ project.status }}">
+                        {% if project.status == 'pending' %}قيد المراجعة
+                        {% elif project.status == 'approved' %}مقبول
+                        {% else %}مرفوض{% endif %}
+                    </span>
+                </div>
+                <p>{{ project.description }}</p>
+                <div class="project-meta">
+                    <span><i class="fas fa-calendar"></i> {{ project.submitted_at[:10] }}</span>
+                    <span><i class="fas fa-tag"></i> {% if project.type == 'project' %}مشروع{% else %}رأي{% endif %}</span>
+                    {% if project.admin_feedback %}
+                    <span><i class="fas fa-comment"></i> ملاحظات: {{ project.admin_feedback }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-project-diagram"></i>
+                <p>لم تقم بإرسال أي مشاريع أو آراء بعد</p>
+                <button class="btn btn-primary" onclick="showProjectModal()">إرسال أول مشروع</button>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <!-- نافذة إرسال المشروع -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('projectModal')">&times;</span>
+            <h3>إرسال مشروع أو رأي</h3>
+            <form id="projectForm">
+                <div class="form-group">
+                    <select id="projectType" required>
+                        <option value="">اختر النوع</option>
+                        <option value="project">مشروع</option>
+                        <option value="opinion">رأي أو اقتراح</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="projectTitle" placeholder="عنوان المشروع أو الرأي" required>
+                </div>
+                <div class="form-group">
+                    <textarea id="projectDescription" placeholder="الوصف أو التفاصيل..." rows="6" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i>
+                    إرسال للإدارة
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function showProjectModal() {
+            document.getElementById('projectModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // نموذج إرسال المشروع
+        document.getElementById('projectForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('type', document.getElementById('projectType').value);
+            formData.append('title', document.getElementById('projectTitle').value);
+            formData.append('description', document.getElementById('projectDescription').value);
+
+            try {
+                const response = await fetch('/api/submit_project', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('تم إرسال المشروع/الرأي بنجاح!');
+                    closeModal('projectModal');
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + result.error);
+                }
+            } catch (error) {
+                alert('حدث خطأ في الاتصال بالخادم');
+            }
+        });
+
+        // إغلاق المودال عند النقر خارجها
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

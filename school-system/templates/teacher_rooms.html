@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الغرف - المعلم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="teacher-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/teacher/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - المعلم
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/teacher/rooms">
+                                <i class="fas fa-door-open me-2"></i>
+                                الغرف الدراسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/assignments">
+                                <i class="fas fa-tasks me-2"></i>
+                                الواجبات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/students">
+                                <i class="fas fa-users me-2"></i>
+                                الطلاب
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-door-open me-2"></i>
+                        إدارة الغرف الدراسية
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                            <i class="fas fa-plus me-1"></i>
+                            إنشاء غرفة جديدة
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-list me-2"></i>
+                            قائمة الغرف الدراسية
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if rooms %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>اسم الغرفة</th>
+                                        <th>المادة</th>
+                                        <th>الصف</th>
+                                        <th>القسم</th>
+                                        <th>رمز الغرفة</th>
+                                        <th>عدد الطلاب</th>
+                                        <th>تاريخ الإنشاء</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for room in rooms %}
+                                    <tr>
+                                        <td>{{ room.name }}</td>
+                                        <td>{{ room.subject }}</td>
+                                        <td>{{ room.grade }}</td>
+                                        <td>{{ room.section }}</td>
+                                        <td><code>{{ room.code }}</code></td>
+                                        <td>
+                                            <span class="badge bg-info">{{ room.student_count }}</span>
+                                        </td>
+                                        <td>{{ room.created_at[:10] }}</td>
+                                        <td>
+                                            <a href="/teacher/room/{{ room.id }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-comments me-1"></i>
+                                                الدردشة
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد غرف دراسية</h5>
+                            <p class="text-muted">أنشئ غرفة دراسية للبدء في التدريس</p>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRoomModal">
+                                <i class="fas fa-plus me-1"></i>
+                                إنشاء غرفة
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal إنشاء غرفة -->
+    <div class="modal fade" id="createRoomModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">إنشاء غرفة دراسية جديدة</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="createRoomForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">اسم الغرفة</label>
+                            <input type="text" class="form-control" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">المادة الدراسية</label>
+                            <input type="text" class="form-control" name="subject" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">الصف</label>
+                                <select class="form-control" name="grade" required>
+                                    <option value="">اختر الصف</option>
+                                    {% for i in range(1, 13) %}
+                                    <option value="{{ i }}">الصف {{ i }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">القسم</label>
+                                <select class="form-control" name="section" required>
+                                    <option value="">اختر القسم</option>
+                                    <option value="أ">أ</option>
+                                    <option value="ب">ب</option>
+                                    <option value="ج">ج</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">وصف الغرفة (اختياري)</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">إنشاء الغرفة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('createRoomForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/api/create_room', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم إنشاء الغرفة بنجاح! رمز الغرفة: ' + data.code);
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('خطأ في الاتصال: ' + error);
+            });
+        });
+    </script>
+</body>
+</html>

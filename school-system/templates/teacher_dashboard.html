@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة المعلم</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="teacher-body">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/teacher/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - المعلم
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-chalkboard-teacher me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/teacher/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/rooms">
+                                <i class="fas fa-door-open me-2"></i>
+                                الغرف الدراسية
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/assignments">
+                                <i class="fas fa-tasks me-2"></i>
+                                الواجبات
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/teacher/students">
+                                <i class="fas fa-users me-2"></i>
+                                الطلاب
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-tachometer-alt me-2"></i>
+                        لوحة التحكم
+                    </h1>
+                </div>
+
+                <!-- إحصائيات -->
+                <div class="row">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-primary shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                            الغرف الدراسية</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.rooms_count }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-door-open fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-success shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                            إجمالي الطلاب</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.students_count }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-info shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                            الواجبات</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.assignments_count }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-tasks fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card border-left-warning shadow h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                            تحت التصحيح</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.pending_grading }}</div>
+                                    </div>
+                                    <div class="col-auto">
+                                        <i class="fas fa-clock fa-2x text-gray-300"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الغرف النشطة -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card shadow">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="m-0 font-weight-bold">
+                                    <i class="fas fa-door-open me-2"></i>
+                                    غرفك الدراسية
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if rooms %}
+                                <div class="row">
+                                    {% for room in rooms %}
+                                    <div class="col-md-4 mb-3">
+                                        <div class="card h-100">
+                                            <div class="card-body">
+                                                <h5 class="card-title">{{ room.name }}</h5>
+                                                <p class="card-text">
+                                                    <strong>المادة:</strong> {{ room.subject }}<br>
+                                                    <strong>الصف:</strong> {{ room.grade }}/{{ room.section }}<br>
+                                                    <strong>الرمز:</strong> <code>{{ room.code }}</code>
+                                                </p>
+                                            </div>
+                                            <div class="card-footer">
+                                                <a href="/teacher/room/{{ room.id }}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-comments me-1"></i>
+                                                    الدخول للدردشة
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-door-open fa-3x text-muted mb-3"></i>
+                                    <h5 class="text-muted">لا توجد غرف دراسية</h5>
+                                    <p class="text-muted">أنشئ غرفة دراسية للبدء</p>
+                                    <a href="/teacher/rooms" class="btn btn-primary">
+                                        <i class="fas fa-plus me-1"></i>
+                                        إنشاء غرفة
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

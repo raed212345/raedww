@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}النظام التعليمي - مدرسة الراشد{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% if current_user.is_authenticated %}
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-graduation-cap"></i>
+            <h2>
+                {% if current_user.user_type.value == 'student' %}الطالب
+                {% elif current_user.user_type.value == 'teacher' %}المعلم
+                {% else %}الإدارة{% endif %}
+            </h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="avatar">
+                <i class="fas fa-{% if current_user.user_type.value == 'student' %}user-graduate{% elif current_user.user_type.value == 'teacher' %}user-tie{% else %}crown{% endif %}"></i>
+            </div>
+            <div class="user-details">
+                <span class="name">{{ current_user.name }}</span>
+                <span class="role">
+                    {% if current_user.user_type.value == 'student' %}
+                        الصف {{ current_user.grade }} - {{ current_user.section }}
+                    {% elif current_user.user_type.value == 'teacher' %}
+                        {{ current_user.subject }}
+                    {% else %}
+                        مدير النظام
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+        
+        <ul class="nav-links">
+            {% block sidebar_links %}{% endblock %}
+            <li><a href="{{ url_for('logout') }}" class="nav-item logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a></li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <button class="close-alert">&times;</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block modals %}{% endblock %}
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

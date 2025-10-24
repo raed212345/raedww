@@ -1,0 +1,383 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المشاريع الطلابية - الإدمن</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body class="admin-body">
+    <!-- شريط التنقل -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/admin/dashboard">
+                <i class="fas fa-school me-2"></i>
+                نظام المدرسة - الإدارة
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="navbar-text me-3">
+                    <i class="fas fa-user-shield me-1"></i>
+                    {{ session.name }}
+                </span>
+                <a class="nav-link" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    تسجيل خروج
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- القائمة الجانبية -->
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/dashboard">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                لوحة التحكم
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/users">
+                                <i class="fas fa-users me-2"></i>
+                                إدارة المستخدمين
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/admin/projects">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                المشاريع الطلابية
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- المحتوى الرئيسي -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="fas fa-project-diagram me-2"></i>
+                        إدارة المشاريع الطلابية
+                    </h1>
+                </div>
+
+                <!-- إحصائيات المشاريع -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-white bg-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>{{ projects|length }}</h4>
+                                        <p>إجمالي المشاريع</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-tasks fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>{{ projects|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
+                                        <p>قيد المراجعة</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-clock fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>{{ projects|selectattr('status', 'equalto', 'approved')|list|length }}</h4>
+                                        <p>مقبولة</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-danger">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4>{{ projects|selectattr('status', 'equalto', 'rejected')|list|length }}</h4>
+                                        <p>مرفوضة</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-times-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- فلترة المشاريع -->
+                <div class="card shadow mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">فلترة حسب الحالة:</label>
+                                <select class="form-select" id="statusFilter" onchange="filterProjects()">
+                                    <option value="all">جميع المشاريع</option>
+                                    <option value="pending">قيد المراجعة</option>
+                                    <option value="approved">مقبولة</option>
+                                    <option value="rejected">مرفوضة</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">فلترة حسب النوع:</label>
+                                <select class="form-select" id="typeFilter" onchange="filterProjects()">
+                                    <option value="all">جميع الأنواع</option>
+                                    <option value="research">بحث</option>
+                                    <option value="presentation">عرض</option>
+                                    <option value="experiment">تجربة</option>
+                                    <option value="other">أخرى</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">بحث:</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="ابحث في المشاريع..." onkeyup="filterProjects()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- قائمة المشاريع -->
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-list me-2"></i>
+                            قائمة المشاريع
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if projects %}
+                        <div class="row" id="projectsContainer">
+                            {% for project in projects %}
+                            <div class="col-md-6 mb-4 project-item" 
+                                 data-status="{{ project.status }}" 
+                                 data-type="{{ project.type }}">
+                                <div class="card h-100 border-{{ 
+                                    'warning' if project.status == 'pending' 
+                                    else 'success' if project.status == 'approved' 
+                                    else 'danger' 
+                                }}">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">{{ project.title }}</h6>
+                                        <span class="badge bg-{{ 
+                                            'warning' if project.status == 'pending' 
+                                            else 'success' if project.status == 'approved' 
+                                            else 'danger' 
+                                        }}">
+                                            {% if project.status == 'pending' %}
+                                                قيد المراجعة
+                                            {% elif project.status == 'approved' %}
+                                                مقبول
+                                            {% else %}
+                                                مرفوض
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">{{ project.description }}</p>
+                                        <div class="project-info">
+                                            <small class="text-muted">
+                                                <i class="fas fa-user me-1"></i>
+                                                {{ project.student_name }} - {{ project.grade }}/{{ project.section }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-tag me-1"></i>
+                                                {{ project.type }}
+                                            </small>
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ project.submitted_at[:10] }}
+                                            </small>
+                                        </div>
+                                        {% if project.admin_feedback %}
+                                        <div class="mt-2 p-2 bg-light rounded">
+                                            <strong>ملاحظات الإدارة:</strong>
+                                            <p class="mb-0">{{ project.admin_feedback }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        {% if project.status == 'pending' %}
+                                        <div class="btn-group w-100">
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="updateProjectStatus({{ project.id }}, 'approved')">
+                                                <i class="fas fa-check me-1"></i>قبول
+                                            </button>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="updateProjectStatus({{ project.id }}, 'rejected')">
+                                                <i class="fas fa-times me-1"></i>رفض
+                                            </button>
+                                            <button class="btn btn-info btn-sm" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#feedbackModal"
+                                                    data-project-id="{{ project.id }}">
+                                                <i class="fas fa-comment me-1"></i>ملاحظات
+                                            </button>
+                                        </div>
+                                        {% else %}
+                                        <button class="btn btn-outline-secondary btn-sm w-100"
+                                                onclick="updateProjectStatus({{ project.id }}, 'pending')">
+                                            <i class="fas fa-undo me-1"></i>إعادة للمراجعة
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">لا توجد مشاريع لعرضها</h5>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal إضافة ملاحظات -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">إضافة ملاحظات على المشروع</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="feedbackForm">
+                    <div class="modal-body">
+                        <input type="hidden" id="feedbackProjectId" name="project_id">
+                        <div class="mb-3">
+                            <label class="form-label">الملاحظات:</label>
+                            <textarea class="form-control" id="adminFeedback" name="feedback" rows="4" 
+                                      placeholder="أدخل ملاحظاتك على المشروع..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                        <button type="submit" class="btn btn-primary">حفظ الملاحظات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // فلترة المشاريع
+        function filterProjects() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            
+            const projects = document.querySelectorAll('.project-item');
+            
+            projects.forEach(project => {
+                const status = project.getAttribute('data-status');
+                const type = project.getAttribute('data-type');
+                const title = project.querySelector('.card-header h6').textContent.toLowerCase();
+                const description = project.querySelector('.card-text').textContent.toLowerCase();
+                
+                const statusMatch = statusFilter === 'all' || status === statusFilter;
+                const typeMatch = typeFilter === 'all' || type === typeFilter;
+                const searchMatch = title.includes(searchInput) || description.includes(searchInput);
+                
+                if (statusMatch && typeMatch && searchMatch) {
+                    project.style.display = 'block';
+                } else {
+                    project.style.display = 'none';
+                }
+            });
+        }
+
+        // تحديث حالة المشروع
+        function updateProjectStatus(projectId, status) {
+            let feedback = '';
+            
+            if (status === 'approved' || status === 'rejected') {
+                feedback = prompt('أدخل ملاحظاتك على المشروع (اختياري):');
+                if (feedback === null) return; // User cancelled
+            }
+            
+            fetch('/api/update_project_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `project_id=${projectId}&status=${status}&feedback=${encodeURIComponent(feedback || '')}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم تحديث حالة المشروع بنجاح!');
+                    location.reload();
+                } else {
+                    alert('حدث خطأ: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('حدث خطأ في الاتصال: ' + error);
+            });
+        }
+
+        // إعداد Modal الملاحظات
+        const feedbackModal = document.getElementById('feedbackModal');
+        feedbackModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const projectId = button.getAttribute('data-project-id');
+            document.getElementById('feedbackProjectId').value = projectId;
+        });
+
+        // إرسال الملاحظات
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const projectId = document.getElementById('feedbackProjectId').value;
+            const feedback = document.getElementById('adminFeedback').value;
+            
+            fetch('/api/update_project_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `project_id=${projectId}&status=pending&feedback=${encodeURIComponent(feedback)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم حفظ الملاحظات بنجاح!');
+                    location.reload();
+                } else {
+                    alert('حدث خطأ: ' + data.error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

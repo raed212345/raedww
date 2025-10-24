@@ -1,0 +1,381 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الطالب - النظام التعليمي</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="dashboard student-dashboard">
+    <nav class="sidebar">
+        <div class="logo">
+            <i class="fas fa-user-graduate"></i>
+            <h2>الطالب</h2>
+        </div>
+        
+        <div class="user-info">
+            <div class="avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-details">
+                <span class="name">{{ session.name }}</span>
+                <span class="role">الصف {{ session.grade }} - {{ session.section }}</span>
+            </div>
+        </div>
+        
+        <ul class="nav-links">
+            <li><a href="{{ url_for('student_dashboard') }}" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a></li>
+            <li><a href="{{ url_for('student_rooms') }}" class="nav-item">
+                <i class="fas fa-door-open"></i>
+                <span>الغرف الدراسية</span>
+                {% if stats.rooms_count > 0 %}
+                <span class="badge">{{ stats.rooms_count }}</span>
+                {% endif %}
+            </a></li>
+            <li><a href="{{ url_for('student_assignments') }}" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>الواجبات</span>
+                {% if stats.pending_assignments > 0 %}
+                <span class="badge">{{ stats.pending_assignments }}</span>
+                {% endif %}
+            </a></li>
+            <li><a href="{{ url_for('student_projects') }}" class="nav-item">
+                <i class="fas fa-project-diagram"></i>
+                <span>المشاريع والآراء</span>
+                {% if stats.projects_count > 0 %}
+                <span class="badge">{{ stats.projects_count }}</span>
+                {% endif %}
+            </a></li>
+            <li><a href="{{ url_for('logout') }}" class="nav-item logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                        <span class="close-alert">&times;</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <header class="top-bar">
+            <h1>مرحباً بعودتك، {{ session.name }}! 👋</h1>
+            <p>هذه نظرة عامة على أدائك الدراسي</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.rooms_count }}</h3>
+                    <p>الغرف الدراسية</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.assignments_count }}</h3>
+                    <p>إجمالي الواجبات</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.pending_assignments }}</h3>
+                    <p>واجبات معلقة</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ stats.projects_count }}</h3>
+                    <p>المشاريع المرسلة</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- الغرف الدراسية -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2>غرفك الدراسية</h2>
+                    <a href="{{ url_for('student_rooms') }}" class="btn btn-outline">عرض الكل</a>
+                </div>
+                <div class="rooms-grid">
+                    {% for room in rooms %}
+                    <div class="room-card">
+                        <div class="room-header">
+                            <h3>{{ room.name }}</h3>
+                            <span class="room-code">{{ room.code }}</span>
+                        </div>
+                        <div class="room-info">
+                            <p><i class="fas fa-book"></i> {{ room.subject }}</p>
+                            <p><i class="fas fa-user-tie"></i> {{ room.teacher_name }}</p>
+                        </div>
+                        <div class="room-actions">
+                            <button class="btn btn-primary" onclick="enterRoom({{ room.id }})">
+                                <i class="fas fa-door-open"></i>
+                                دخول الغرفة
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-door-open"></i>
+                        <p>لا توجد غرف دراسية مسجلة</p>
+                        <button class="btn btn-primary" onclick="joinRoom()">انضم إلى غرفة</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- الواجبات القادمة -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2>الواجبات القادمة</h2>
+                    <a href="{{ url_for('student_assignments') }}" class="btn btn-outline">عرض الكل</a>
+                </div>
+                <div class="assignments-list">
+                    {% for assignment in upcoming_assignments %}
+                    <div class="assignment-item">
+                        <div class="assignment-info">
+                            <h4>{{ assignment.title }}</h4>
+                            <p>{{ assignment.description[:100] }}{% if assignment.description|length > 100 %}...{% endif %}</p>
+                            <div class="assignment-meta">
+                                <span><i class="fas fa-user-tie"></i> {{ assignment.teacher_name }}</span>
+                                <span class="due-date"><i class="fas fa-clock"></i> {{ assignment.due_date }}</span>
+                            </div>
+                        </div>
+                        <div class="assignment-actions">
+                            <button class="btn btn-primary" onclick="viewAssignment({{ assignment.id }})">
+                                <i class="fas fa-eye"></i>
+                                عرض
+                            </button>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-tasks"></i>
+                        <p>لا توجد واجبات قادمة</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- المشاريع الأخيرة -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2>آخر المشاريع والآراء</h2>
+                    <a href="{{ url_for('student_projects') }}" class="btn btn-outline">عرض الكل</a>
+                </div>
+                <div class="projects-list">
+                    {% for project in projects %}
+                    <div class="project-item">
+                        <div class="project-header">
+                            <h4>{{ project.title }}</h4>
+                            <span class="status-badge status-{{ project.status }}">
+                                {% if project.status == 'pending' %}قيد المراجعة
+                                {% elif project.status == 'approved' %}مقبول
+                                {% else %}مرفوض{% endif %}
+                            </span>
+                        </div>
+                        <p>{{ project.description[:80] }}{% if project.description|length > 80 %}...{% endif %}</p>
+                        <div class="project-meta">
+                            <span><i class="fas fa-calendar"></i> {{ project.submitted_at[:10] }}</span>
+                            <span><i class="fas fa-tag"></i> {% if project.type == 'project' %}مشروع{% else %}رأي{% endif %}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-project-diagram"></i>
+                        <p>لم تقم بإرسال أي مشاريع بعد</p>
+                        <a href="{{ url_for('student_projects') }}" class="btn btn-primary">إرسال مشروع</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+
+            <!-- الإشعارات -->
+            <section class="content-section">
+                <div class="section-header">
+                    <h2>الإشعارات المهمة</h2>
+                </div>
+                <div class="notifications-list">
+                    <div class="notification-item">
+                        <div class="notification-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p>مرحباً بك في النظام التعليمي! يمكنك الآن الانضمام إلى الغرف الدراسية وتقديم الواجبات.</p>
+                            <small>منذ قليل</small>
+                        </div>
+                    </div>
+                    {% if stats.pending_assignments > 0 %}
+                    <div class="notification-item">
+                        <div class="notification-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <p>لديك {{ stats.pending_assignments }} واجبات تحتاج للتسليم.</p>
+                            <small>يجب المراجعة</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- نافذة الانضمام للغرفة -->
+    <div id="joinRoomModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('joinRoomModal')">&times;</span>
+            <h3>انضم إلى غرفة دراسية</h3>
+            <form id="joinRoomForm">
+                <div class="form-group">
+                    <input type="text" id="roomCode" placeholder="أدخل رمز الغرفة" required>
+                </div>
+                <button type="submit" class="btn btn-primary">انضم الآن</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة حل الواجب -->
+    <div id="assignmentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('assignmentModal')">&times;</span>
+            <div id="assignmentContent">
+                <!-- محتوى الواجب -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // دوال الطالب
+        function joinRoom() {
+            document.getElementById('joinRoomModal').style.display = 'block';
+        }
+
+        function enterRoom(roomId) {
+            alert('جاري فتح الغرفة الدراسية... سيتم تفعيل نظام الدردشة في التحديثات القادمة');
+        }
+
+        function viewAssignment(assignmentId) {
+            // محاكاة عرض الواجب
+            const modalContent = `
+                <h3>تفاصيل الواجب #${assignmentId}</h3>
+                <div class="assignment-details">
+                    <p>هذه نافذة معاينة الواجب. في التطبيق الكامل، سيتم جلب البيانات من الخادم.</p>
+                    <div class="form-group">
+                        <textarea placeholder="أدخل حلك هنا..." rows="6" id="solutionText"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="submitAssignment(${assignmentId})">
+                        <i class="fas fa-paper-plane"></i>
+                        تسليم الحل
+                    </button>
+                </div>
+            `;
+            document.getElementById('assignmentContent').innerHTML = modalContent;
+            document.getElementById('assignmentModal').style.display = 'block';
+        }
+
+        async function submitAssignment(assignmentId) {
+            const solution = document.getElementById('solutionText').value;
+            
+            if (!solution.trim()) {
+                alert('يرجى إدخال حل الواجب');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('assignment_id', assignmentId);
+            formData.append('solution', solution);
+
+            try {
+                const response = await fetch('/api/submit_assignment', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('تم تسليم الواجب بنجاح!');
+                    closeModal('assignmentModal');
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + result.error);
+                }
+            } catch (error) {
+                alert('حدث خطأ في الاتصال بالخادم');
+            }
+        }
+
+        // إدارة المودالات
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // إغلاق التنبيهات
+        document.querySelectorAll('.close-alert').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+
+        // نموذج الانضمام للغرفة
+        document.getElementById('joinRoomForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            formData.append('room_code', document.getElementById('roomCode').value);
+
+            try {
+                const response = await fetch('/api/join_room', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('تم الانضمام إلى الغرفة بنجاح!');
+                    closeModal('joinRoomModal');
+                    location.reload();
+                } else {
+                    alert('خطأ: ' + result.error);
+                }
+            } catch (error) {
+                alert('حدث خطأ في الاتصال بالخادم');
+            }
+        });
+
+        // إغلاق المودال عند النقر خارجها
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
